@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI의 모든 것 - 나의 성격 유형 찾기</title>
+<meta name="description" content="MBTI 테스트로 나의 성격 유형을 알아보세요. 16가지 성격 유형별 특징, 직업, 연애, 인간관계 정보를 제공합니다.">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4A90E2',secondary:'#FF6B6B'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Noto Sans KR', sans-serif;
+color: #333;
+}
+.progress-bar {
+width: 100%;
+height: 8px;
+background-color: #e9ecef;
+border-radius: 4px;
+overflow: hidden;
+}
+.progress {
+height: 100%;
+background-color: #4A90E2;
+transition: width 0.3s ease;
+}
+.question-card {
+display: none;
+}
+.question-card.active {
+display: block;
+}
+.likert-scale {
+display: flex;
+justify-content: space-between;
+margin: 20px 0;
+}
+.likert-option {
+display: flex;
+flex-direction: column;
+align-items: center;
+cursor: pointer;
+}
+.likert-circle {
+width: 24px;
+height: 24px;
+border-radius: 50%;
+border: 2px solid #ddd;
+margin-bottom: 8px;
+transition: all 0.2s;
+}
+.likert-circle.selected {
+border-color: #4A90E2;
+background-color: #4A90E2;
+}
+.likert-label {
+font-size: 12px;
+color: #666;
+}
+.mbti-card {
+transition: all 0.3s ease;
+}
+.mbti-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.custom-switch {
+position: relative;
+display: inline-block;
+width: 50px;
+height: 24px;
+}
+.custom-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+.slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #ccc;
+transition: .4s;
+border-radius: 34px;
+}
+.slider:before {
+position: absolute;
+content: "";
+height: 16px;
+width: 16px;
+left: 4px;
+bottom: 4px;
+background-color: white;
+transition: .4s;
+border-radius: 50%;
+}
+input:checked + .slider {
+background-color: #4A90E2;
+}
+input:checked + .slider:before {
+transform: translateX(26px);
+}
+.tab-button {
+padding: 8px 16px;
+border-radius: 9999px;
+font-weight: 500;
+transition: all 0.3s;
+}
+.tab-button.active {
+background-color: #4A90E2;
+color: white;
+}
+.type-colors {
+--intj: #546E7A;
+--intp: #78909C;
+--entj: #455A64;
+--entp: #607D8B;
+--infj: #7E57C2;
+--infp: #9575CD;
+--enfj: #5E35B1;
+--enfp: #673AB7;
+--istj: #43A047;
+--isfj: #66BB6A;
+--estj: #2E7D32;
+--esfj: #4CAF50;
+--istp: #EF5350;
+--isfp: #E57373;
+--estp: #D32F2F;
+--esfp: #F44336;
+}
+.compatibility-grid {
+display: grid;
+grid-template-columns: repeat(17, 1fr);
+gap: 1px;
+}
+.compatibility-cell {
+width: 100%;
+aspect-ratio: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 10px;
+font-weight: 500;
+}
+.compatibility-header {
+background-color: #f1f5f9;
+font-weight: bold;
+}
+.compatibility-excellent {
+background-color: rgba(74, 144, 226, 0.8);
+color: white;
+}
+.compatibility-good {
+background-color: rgba(74, 144, 226, 0.5);
+color: white;
+}
+.compatibility-average {
+background-color: rgba(74, 144, 226, 0.2);
+}
+.compatibility-challenging {
+background-color: rgba(255, 107, 107, 0.2);
+}
+.compatibility-difficult {
+background-color: rgba(255, 107, 107, 0.5);
+color: white;
+}
+@media (max-width: 768px) {
+.compatibility-grid {
+grid-template-columns: repeat(9, 1fr);
+}
+.compatibility-row-header {
+grid-column: 1;
+}
+.second-grid {
+margin-top: 20px;
+}
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<!-- 네비게이션 바 -->
+<header class="sticky top-0 z-50 bg-white shadow-sm">
+<nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+<a href="#" class="text-2xl font-['Pacifico'] text-primary">MBTI의 모든 것</a>
+<!-- 데스크탑 메뉴 -->
+<div class="hidden md:flex space-x-6">
+<a href="#home" class="font-medium text-gray-700 hover:text-primary transition-colors">홈</a>
+<a href="#test" class="font-medium text-gray-700 hover:text-primary transition-colors">MBTI 테스트</a>
+<a href="#types" class="font-medium text-gray-700 hover:text-primary transition-colors">유형별 탐색</a>
+<a href="#compatibility" class="font-medium text-gray-700 hover:text-primary transition-colors">MBTI 궁합/관계</a>
+</div>
+<!-- 모바일 메뉴 버튼 -->
+<div class="md:hidden w-10 h-10 flex items-center justify-center">
+<button id="mobile-menu-button" class="text-gray-700">
+<i class="ri-menu-line ri-lg"></i>
+</button>
+</div>
+</nav>
+<!-- 모바일 메뉴 -->
+<div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-2">
+<div class="flex flex-col space-y-3 py-2">
+<a href="#home" class="font-medium text-gray-700 hover:text-primary transition-colors py-1">홈</a>
+<a href="#test" class="font-medium text-gray-700 hover:text-primary transition-colors py-1">MBTI 테스트</a>
+<a href="#types" class="font-medium text-gray-700 hover:text-primary transition-colors py-1">유형별 탐색</a>
+<a href="#compatibility" class="font-medium text-gray-700 hover:text-primary transition-colors py-1">MBTI 궁합/관계</a>
+</div>
+</div>
+</header>
+<!-- 홈 섹션 -->
+<section id="home" class="relative bg-gradient-to-r from-white to-blue-50 overflow-hidden">
+<div class="container mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center">
+<div class="md:w-1/2 z-10">
+<h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+나를 발견하는 여정,<br>
+<span class="text-primary">MBTI의 모든 것</span>
+</h1>
+<p class="text-lg text-gray-600 mb-8">
+16가지 성격 유형으로 알아보는 나의 성격, 관계, 직업 적성까지.<br>
+지금 바로 테스트를 통해 당신의 MBTI 유형을 알아보세요.
+</p>
+<a href="#test" class="inline-block bg-primary text-white font-medium px-8 py-3 !rounded-button shadow-lg hover:bg-blue-600 transition-colors whitespace-nowrap">
+무료 MBTI 테스트 시작하기
+</a>
+</div>
+<div class="md:w-1/2 mt-12 md:mt-0">
+<img src="https://readdy.ai/api/search-image?query=colorful%20abstract%20illustration%20of%2016%20different%20personality%20types%20represented%20by%20unique%20symbols%20and%20colors%2C%20modern%20minimalist%20design%20with%20clean%20lines%20and%20geometric%20shapes%2C%20light%20background%2C%20professional%20psychology%20concept%20art&width=600&height=500&seq=mbti1&orientation=landscape" alt="MBTI 성격 유형 일러스트" class="w-full h-auto rounded-lg shadow-xl object-cover object-top">
+</div>
+</div>
+<!-- 스크롤 다운 표시 -->
+<div class="absolute bottom-5 left-1/2 transform -translate-x-1/2 animate-bounce">
+<div class="w-10 h-10 flex items-center justify-center text-primary">
+<i class="ri-arrow-down-line ri-xl"></i>
+</div>
+</div>
+</section>
+<!-- MBTI 소개 섹션 -->
+<section class="py-16 bg-white">
+<div class="container mx-auto px-4">
+<h2 class="text-3xl font-bold text-center mb-12">MBTI란 무엇인가요?</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+<div class="bg-blue-50 p-6 rounded-lg">
+<div class="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full mb-4">
+<i class="ri-user-line ri-xl text-primary"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">외향형 vs 내향형</h3>
+<p class="text-gray-600">에너지를 얻는 방식에 따라 사람들과 어울리며 에너지를 얻는 외향형(E)과 혼자만의 시간을 통해 에너지를 충전하는 내향형(I)으로 구분됩니다.</p>
+</div>
+<div class="bg-purple-50 p-6 rounded-lg">
+<div class="w-12 h-12 flex items-center justify-center bg-purple-100 rounded-full mb-4">
+<i class="ri-eye-line ri-xl text-purple-600"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">감각형 vs 직관형</h3>
+<p class="text-gray-600">정보를 인식하는 방식에 따라 오감을 통한 구체적 정보를 선호하는 감각형(S)과 패턴과 가능성을 중시하는 직관형(N)으로 나뉩니다.</p>
+</div>
+<div class="bg-green-50 p-6 rounded-lg">
+<div class="w-12 h-12 flex items-center justify-center bg-green-100 rounded-full mb-4">
+<i class="ri-brain-line ri-xl text-green-600"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">사고형 vs 감정형</h3>
+<p class="text-gray-600">결정을 내리는 방식에 따라 논리와 객관성을 중시하는 사고형(T)과 가치와 조화를 중시하는 감정형(F)으로 구분됩니다.</p>
+</div>
+<div class="bg-amber-50 p-6 rounded-lg">
+<div class="w-12 h-12 flex items-center justify-center bg-amber-100 rounded-full mb-4">
+<i class="ri-calendar-line ri-xl text-amber-600"></i>
+</div>
+<h3 class="text-xl font-bold mb-3">판단형 vs 인식형</h3>
+<p class="text-gray-600">생활 방식에 따라 계획적이고 체계적인 판단형(J)과 유연하고 적응력이 높은 인식형(P)으로 나뉩니다.</p>
+</div>
+</div>
+<div class="text-center mb-12">
+<h2 class="text-3xl font-bold mb-6">16가지 성격 유형</h2>
+<p class="text-lg text-gray-600 max-w-3xl mx-auto">
+MBTI는 위 4가지 지표의 조합으로 총 16가지 성격 유형을 분류합니다. 각 유형은 고유한 특성과 강점, 약점을 가지고 있습니다.
+</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<!-- 분석가형 -->
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#546E7A] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#546E7A]">INTJ</h3>
+<p class="text-sm text-gray-600">전략가</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#78909C] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#78909C]">INTP</h3>
+<p class="text-sm text-gray-600">논리학자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#455A64] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#455A64]">ENTJ</h3>
+<p class="text-sm text-gray-600">통솔자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#607D8B] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#607D8B]">ENTP</h3>
+<p class="text-sm text-gray-600">변론가</p>
+</div>
+<!-- 외교관형 -->
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#7E57C2] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#7E57C2]">INFJ</h3>
+<p class="text-sm text-gray-600">옹호자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#9575CD] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#9575CD]">INFP</h3>
+<p class="text-sm text-gray-600">중재자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#5E35B1] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#5E35B1]">ENFJ</h3>
+<p class="text-sm text-gray-600">선도자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#673AB7] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#673AB7]">ENFP</h3>
+<p class="text-sm text-gray-600">활동가</p>
+</div>
+<!-- 관리자형 -->
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#43A047] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#43A047]">ISTJ</h3>
+<p class="text-sm text-gray-600">현실주의자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#66BB6A] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#66BB6A]">ISFJ</h3>
+<p class="text-sm text-gray-600">수호자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#2E7D32] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#2E7D32]">ESTJ</h3>
+<p class="text-sm text-gray-600">경영자</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#4CAF50] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#4CAF50]">ESFJ</h3>
+<p class="text-sm text-gray-600">집정관</p>
+</div>
+<!-- 탐험가형 -->
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#EF5350] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#EF5350]">ISTP</h3>
+<p class="text-sm text-gray-600">장인</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#E57373] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#E57373]">ISFP</h3>
+<p class="text-sm text-gray-600">모험가</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#D32F2F] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#D32F2F]">ESTP</h3>
+<p class="text-sm text-gray-600">사업가</p>
+</div>
+<div class="mbti-card bg-white p-4 rounded-lg shadow-md border-t-4 border-[#F44336] hover:shadow-lg transition-all">
+<h3 class="font-bold text-[#F44336]">ESFP</h3>
+<p class="text-sm text-gray-600">연예인</p>
+</div>
+</div>
+</div>
+</section>
+<!-- MBTI 테스트 섹션 -->
+<section id="test" class="py-16 bg-gray-50">
+<div class="container mx-auto px-4">
+<div class="max-w-3xl mx-auto">
+<div id="test-intro" class="bg-white p-8 rounded-lg shadow-md">
+<h2 class="text-3xl font-bold mb-6 text-center">MBTI 테스트 시작하기</h2>
+<p class="text-gray-600 mb-8 text-center">
+50개의 질문을 통해 당신의 MBTI 유형을 알아보세요.<br>
+솔직하게 답변할수록 더 정확한 결과를 얻을 수 있습니다.
+</p>
+<div class="bg-blue-50 p-4 rounded-lg mb-8">
+<div class="flex items-start">
+<div class="w-10 h-10 flex items-center justify-center text-primary mr-3">
+<i class="ri-information-line ri-lg"></i>
+</div>
+<div>
+<h3 class="font-bold mb-2">테스트 안내</h3>
+<ul class="text-sm text-gray-600 space-y-2">
+<li>• 예상 소요 시간: 약 10-15분</li>
+<li>• 각 문항에 '매우 그렇다'부터 '전혀 그렇지 않다'까지 5단계로 응답해주세요.</li>
+<li>• 중간에 테스트를 중단하면 결과가 저장되지 않습니다.</li>
+<li>• 정답은 없으니 자신의 평소 모습을 떠올리며 답변해주세요.</li>
+</ul>
+</div>
+</div>
+</div>
+<button id="start-test-btn" class="w-full bg-primary text-white font-medium py-3 !rounded-button shadow-md hover:bg-blue-600 transition-colors whitespace-nowrap">
+테스트 시작하기
+</button>
+</div>
+<div id="test-questions" class="hidden">
+<div class="bg-white p-8 rounded-lg shadow-md">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold">MBTI 테스트</h2>
+<div class="text-sm text-gray-500">
+<span id="current-question">1</span> / <span id="total-questions">50</span>
+</div>
+</div>
+<div class="progress-bar mb-8">
+<div class="progress" style="width: 2%;"></div>
+</div>
+<!-- 질문 카드 -->
+<div id="question-container">
+<!-- 질문 1 -->
+<div class="question-card active" data-question="1">
+<h3 class="text-lg font-medium mb-6">1. 새로운 사람들과의 만남이 즐겁고 에너지가 생긴다.</h3>
+<div class="likert-scale">
+<div class="likert-option" data-value="1">
+<div class="likert-circle"></div>
+<span class="likert-label">전혀 그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="2">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="3">
+<div class="likert-circle"></div>
+<span class="likert-label">보통이다</span>
+</div>
+<div class="likert-option" data-value="4">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇다</span>
+</div>
+<div class="likert-option" data-value="5">
+<div class="likert-circle"></div>
+<span class="likert-label">매우 그렇다</span>
+</div>
+</div>
+</div>
+<!-- 질문 2 -->
+<div class="question-card" data-question="2">
+<h3 class="text-lg font-medium mb-6">2. 파티보다는 혼자 조용한 시간을 보내는 것이 더 편하다.</h3>
+<div class="likert-scale">
+<div class="likert-option" data-value="1">
+<div class="likert-circle"></div>
+<span class="likert-label">전혀 그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="2">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="3">
+<div class="likert-circle"></div>
+<span class="likert-label">보통이다</span>
+</div>
+<div class="likert-option" data-value="4">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇다</span>
+</div>
+<div class="likert-option" data-value="5">
+<div class="likert-circle"></div>
+<span class="likert-label">매우 그렇다</span>
+</div>
+</div>
+</div>
+<!-- 질문 3 -->
+<div class="question-card" data-question="3">
+<h3 class="text-lg font-medium mb-6">3. 생각을 정리하려면 누군가와 이야기하는 것이 도움이 된다.</h3>
+<div class="likert-scale">
+<div class="likert-option" data-value="1">
+<div class="likert-circle"></div>
+<span class="likert-label">전혀 그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="2">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="3">
+<div class="likert-circle"></div>
+<span class="likert-label">보통이다</span>
+</div>
+<div class="likert-option" data-value="4">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇다</span>
+</div>
+<div class="likert-option" data-value="5">
+<div class="likert-circle"></div>
+<span class="likert-label">매우 그렇다</span>
+</div>
+</div>
+</div>
+<!-- 나머지 질문들도 같은 형식으로 추가 -->
+</div>
+<div class="flex justify-between mt-8">
+<button id="prev-btn" class="px-6 py-2 border border-gray-300 text-gray-700 !rounded-button hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap" disabled>
+이전 질문
+</button>
+<button id="next-btn" class="px-6 py-2 bg-primary text-white !rounded-button hover:bg-blue-600 transition-colors whitespace-nowrap">
+다음 질문
+</button>
+</div>
+</div>
+</div>
+<div id="test-result" class="hidden bg-white p-8 rounded-lg shadow-md">
+<div class="text-center mb-8">
+<div class="w-20 h-20 rounded-full bg-primary text-white flex items-center justify-center mx-auto mb-4">
+<i class="ri-user-smile-line ri-2x"></i>
+</div>
+<h2 class="text-3xl font-bold mb-2">당신의 MBTI 유형은</h2>
+<div class="text-4xl font-bold text-primary mb-2" id="result-type">ENFP</div>
+<p class="text-xl text-gray-600" id="result-nickname">활동가</p>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-blue-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">에너지 방향</h3>
+<div class="flex items-center">
+<div class="w-full bg-gray-200 rounded-full h-4">
+<div id="e-i-bar" class="bg-primary h-4 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<div class="flex justify-between text-sm mt-1">
+<span>외향형 (E)</span>
+<span>내향형 (I)</span>
+</div>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">인식 기능</h3>
+<div class="flex items-center">
+<div class="w-full bg-gray-200 rounded-full h-4">
+<div id="s-n-bar" class="bg-purple-600 h-4 rounded-full" style="width: 70%"></div>
+</div>
+</div>
+<div class="flex justify-between text-sm mt-1">
+<span>감각형 (S)</span>
+<span>직관형 (N)</span>
+</div>
+</div>
+<div class="bg-green-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">판단 기능</h3>
+<div class="flex items-center">
+<div class="w-full bg-gray-200 rounded-full h-4">
+<div id="t-f-bar" class="bg-green-600 h-4 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<div class="flex justify-between text-sm mt-1">
+<span>사고형 (T)</span>
+<span>감정형 (F)</span>
+</div>
+</div>
+<div class="bg-amber-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">생활 양식</h3>
+<div class="flex items-center">
+<div class="w-full bg-gray-200 rounded-full h-4">
+<div id="j-p-bar" class="bg-amber-600 h-4 rounded-full" style="width: 80%"></div>
+</div>
+</div>
+<div class="flex justify-between text-sm mt-1">
+<span>판단형 (J)</span>
+<span>인식형 (P)</span>
+</div>
+</div>
+</div>
+<div class="mb-8">
+<h3 class="text-xl font-bold mb-4">ENFP의 주요 특징</h3>
+<ul class="space-y-2 text-gray-600">
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>열정적이고 창의적인 성격으로 새로운 가능성을 발견하는 데 탁월합니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>사람들과의 관계에서 진정성을 중요시하며 타인의 잠재력을 끌어내는 데 능숙합니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>호기심이 많고 다양한 관심사를 가지고 있어 지루함을 잘 느끼지 않습니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>즉흥적이고 융통성 있는 생활 방식을 선호하며 계획보다는 가능성에 집중합니다.</span>
+</li>
+</ul>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a href="#types" class="flex-1 px-6 py-3 bg-primary text-white text-center !rounded-button hover:bg-blue-600 transition-colors whitespace-nowrap">
+ENFP 유형 자세히 보기
+</a>
+<button id="restart-test-btn" class="flex-1 px-6 py-3 border border-primary text-primary text-center !rounded-button hover:bg-blue-50 transition-colors whitespace-nowrap">
+테스트 다시 하기
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 유형별 탐색 섹션 -->
+<section id="types" class="py-16 bg-white">
+<div class="container mx-auto px-4">
+<h2 class="text-3xl font-bold text-center mb-12">MBTI 유형별 탐색</h2>
+<div class="mb-8">
+<div class="flex flex-wrap justify-center gap-2 mb-8">
+<button class="tab-button active" data-group="all">전체</button>
+<button class="tab-button" data-group="analysts">분석가형</button>
+<button class="tab-button" data-group="diplomats">외교관형</button>
+<button class="tab-button" data-group="sentinels">관리자형</button>
+<button class="tab-button" data-group="explorers">탐험가형</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<!-- 분석가형 -->
+<div class="mbti-card group-analysts bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#546E7A]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#546E7A]">INTJ</h3>
+<span class="text-xs px-2 py-1 bg-[#546E7A] bg-opacity-10 text-[#546E7A] rounded-full">분석가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">전략가</h4>
+<p class="text-sm text-gray-600 mb-4">
+상상력이 풍부하고 전략적인 사고를 가진 혁신가입니다. 모든 가능성을 고려하여 체계적인 계획을 세우는 데 능숙합니다.
+</p>
+<button id="view-details-INTJ" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTJ">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-analysts bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#78909C]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#78909C]">INTP</h3>
+<span class="text-xs px-2 py-1 bg-[#78909C] bg-opacity-10 text-[#78909C] rounded-full">분석가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">논리학자</h4>
+<p class="text-sm text-gray-600 mb-4">
+끊임없이 새로운 지식을 추구하는 혁신적인 발명가입니다. 복잡한 문제를 해결하는 데 뛰어난 통찰력을 보여줍니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-analysts bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#455A64]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#455A64]">ENTJ</h3>
+<span class="text-xs px-2 py-1 bg-[#455A64] bg-opacity-10 text-[#455A64] rounded-full">분석가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">통솔자</h4>
+<p class="text-sm text-gray-600 mb-4">
+대담하고 상상력이 풍부하며 강한 의지를 가진 지도자입니다. 항상 길을 찾아내고 목표를 달성하는 데 집중합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-analysts bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#607D8B]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#607D8B]">ENTP</h3>
+<span class="text-xs px-2 py-1 bg-[#607D8B] bg-opacity-10 text-[#607D8B] rounded-full">분석가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">변론가</h4>
+<p class="text-sm text-gray-600 mb-4">
+지적 도전을 즐기는 영리하고 호기심 많은 사상가입니다. 다양한 관점에서 문제를 바라보는 능력이 뛰어납니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<!-- 외교관형 -->
+<div class="mbti-card group-diplomats bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#7E57C2]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#7E57C2]">INFJ</h3>
+<span class="text-xs px-2 py-1 bg-[#7E57C2] bg-opacity-10 text-[#7E57C2] rounded-full">외교관형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">옹호자</h4>
+<p class="text-sm text-gray-600 mb-4">
+조용하고 신비로우며 영감을 주는 이상주의자입니다. 다른 사람의 성장을 돕는 데 깊은 만족감을 느낍니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-diplomats bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#9575CD]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#9575CD]">INFP</h3>
+<span class="text-xs px-2 py-1 bg-[#9575CD] bg-opacity-10 text-[#9575CD] rounded-full">외교관형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">중재자</h4>
+<p class="text-sm text-gray-600 mb-4">
+이상적이고 공감 능력이 뛰어난 성격으로, 깊은 개인적 가치를 중요시합니다. 타인과 세상의 선을 추구합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-diplomats bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#5E35B1]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#5E35B1]">ENFJ</h3>
+<span class="text-xs px-2 py-1 bg-[#5E35B1] bg-opacity-10 text-[#5E35B1] rounded-full">외교관형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">선도자</h4>
+<p class="text-sm text-gray-600 mb-4">
+카리스마 있고 영감을 주는 지도자로, 타인의 성장과 발전을 돕는 데 깊은 관심을 가지고 있습니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-diplomats bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#673AB7]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#673AB7]">ENFP</h3>
+<span class="text-xs px-2 py-1 bg-[#673AB7] bg-opacity-10 text-[#673AB7] rounded-full">외교관형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">활동가</h4>
+<p class="text-sm text-gray-600 mb-4">
+열정적이고 창의적인 자유로운 영혼으로, 새로운 가능성을 발견하고 사람들과 연결되는 것을 즐깁니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<!-- 관리자형 -->
+<div class="mbti-card group-sentinels bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#43A047]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#43A047]">ISTJ</h3>
+<span class="text-xs px-2 py-1 bg-[#43A047] bg-opacity-10 text-[#43A047] rounded-full">관리자형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">현실주의자</h4>
+<p class="text-sm text-gray-600 mb-4">
+사실을 중시하는 책임감 강한 현실주의자입니다. 체계적이고 신뢰할 수 있는 방식으로 일을 처리합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-sentinels bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#66BB6A]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#66BB6A]">ISFJ</h3>
+<span class="text-xs px-2 py-1 bg-[#66BB6A] bg-opacity-10 text-[#66BB6A] rounded-full">관리자형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">수호자</h4>
+<p class="text-sm text-gray-600 mb-4">
+헌신적이고 따뜻한 수호자로, 사랑하는 사람들을 보호하고 지원하는 데 기쁨을 느낍니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-sentinels bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#2E7D32]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#2E7D32]">ESTJ</h3>
+<span class="text-xs px-2 py-1 bg-[#2E7D32] bg-opacity-10 text-[#2E7D32] rounded-full">관리자형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">경영자</h4>
+<p class="text-sm text-gray-600 mb-4">
+실용적이고 사실 중심적인 성격으로, 체계와 질서를 중요시하며 목표 달성에 집중합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-sentinels bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#4CAF50]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#4CAF50]">ESFJ</h3>
+<span class="text-xs px-2 py-1 bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] rounded-full">관리자형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">집정관</h4>
+<p class="text-sm text-gray-600 mb-4">
+배려심 깊고 사교적인 성격으로, 조화로운 환경을 조성하고 타인의 필요를 충족시키는 데 능숙합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<!-- 탐험가형 -->
+<div class="mbti-card group-explorers bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#EF5350]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#EF5350]">ISTP</h3>
+<span class="text-xs px-2 py-1 bg-[#EF5350] bg-opacity-10 text-[#EF5350] rounded-full">탐험가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">장인</h4>
+<p class="text-sm text-gray-600 mb-4">
+대담하고 실용적인 실험가로, 손으로 만지고 탐구하며 문제 해결에 뛰어난 능력을 보여줍니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-explorers bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#E57373]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#E57373]">ISFP</h3>
+<span class="text-xs px-2 py-1 bg-[#E57373] bg-opacity-10 text-[#E57373] rounded-full">탐험가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">모험가</h4>
+<p class="text-sm text-gray-600 mb-4">
+유연하고 매력적인 예술가로, 자신만의 방식으로 아름다움을 찾고 표현하는 것을 즐깁니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-explorers bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#D32F2F]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#D32F2F]">ESTP</h3>
+<span class="text-xs px-2 py-1 bg-[#D32F2F] bg-opacity-10 text-[#D32F2F] rounded-full">탐험가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">사업가</h4>
+<p class="text-sm text-gray-600 mb-4">
+스마트하고 에너지 넘치는 성격으로, 위험을 감수하고 즉각적인 결과를 얻는 것을 선호합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+<div class="mbti-card group-explorers bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all">
+<div class="h-3 bg-[#F44336]"></div>
+<div class="p-5">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xl font-bold text-[#F44336]">ESFP</h3>
+<span class="text-xs px-2 py-1 bg-[#F44336] bg-opacity-10 text-[#F44336] rounded-full">탐험가형</span>
+</div>
+<h4 class="text-lg font-medium mb-3">연예인</h4>
+<p class="text-sm text-gray-600 mb-4">
+자발적이고 활기찬 엔터테이너로, 주변 사람들에게 즐거움을 주는 것을 좋아합니다.
+</p>
+<button id="view-details-INTP" class="view-details-btn text-primary text-sm font-medium flex items-center" data-mbti="INTP">
+자세히 보기
+<i class="ri-arrow-right-line ml-1"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 유형 상세 정보 (예시: ENFP) -->
+<div id="type-detail" class="mt-16 bg-white rounded-lg shadow-md overflow-hidden">
+<div class="h-4 bg-[#673AB7]"></div>
+<div class="p-8">
+<div class="flex flex-col md:flex-row gap-8 mb-8">
+<div class="md:w-2/3">
+<div class="flex items-center mb-4">
+<h2 class="text-3xl font-bold text-[#673AB7] mr-3">ENFP</h2>
+<span class="text-lg font-medium">활동가</span>
+</div>
+<p class="text-gray-600 mb-6">
+ENFP는 열정적이고 창의적인 자유로운 영혼으로, 새로운 가능성을 발견하고 사람들과 연결되는 것을 즐깁니다. 호기심이 많고 통찰력이 뛰어나며, 다양한 관심사를 가지고 있어 지루함을 잘 느끼지 않습니다. 사람들의 잠재력을 끌어내는 데 능숙하며, 진정성 있는 관계를 중요시합니다.
+</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+<div class="bg-purple-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">강점</h3>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 창의적이고 혁신적인 사고</li>
+<li>• 뛰어난 의사소통 능력</li>
+<li>• 사람들에게 영감을 주는 능력</li>
+<li>• 적응력과 유연성</li>
+<li>• 열정과 에너지</li>
+</ul>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h3 class="font-bold mb-2">약점</h3>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 집중력 부족과 산만함</li>
+<li>• 실용적인 일상 업무에 대한 어려움</li>
+<li>• 과도한 감정적 반응</li>
+<li>• 갈등과 비판에 민감함</li>
+<li>• 독립적인 결정에 어려움</li>
+</ul>
+</div>
+</div>
+<div class="mb-6">
+<h3 class="font-bold mb-2">유명한 ENFP 인물</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">로빈 윌리엄스</span>
+<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">월트 디즈니</span>
+<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">엘런 드제너러스</span>
+<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">로버트 다우니 주니어</span>
+<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">제니퍼 로렌스</span>
+</div>
+</div>
+</div>
+<div class="md:w-1/3">
+<img src="https://readdy.ai/api/search-image?query=colorful%20illustration%20of%20an%20enthusiastic%20and%20creative%20person%20with%20vibrant%20energy%2C%20surrounded%20by%20multiple%20ideas%20and%20possibilities%2C%20artistic%20representation%20of%20ENFP%20personality%20type%2C%20modern%20minimalist%20design&width=400&height=400&seq=enfp1&orientation=squarish" alt="ENFP 성격 유형 일러스트" class="w-full h-auto rounded-lg shadow-md object-cover object-top">
+</div>
+</div>
+<div class="mb-8">
+<div class="border-b border-gray-200">
+<div class="flex flex-wrap -mb-px">
+<button class="tab-button active px-1 py-1 mr-4" data-tab="career">직업/학업</button>
+<button class="tab-button px-1 py-1 mr-4" data-tab="relationships">연애/인간관계</button>
+<button class="tab-button px-1 py-1" data-tab="stress">스트레스 관리</button>
+</div>
+</div>
+<div class="py-6">
+<!-- 직업/학업 탭 -->
+<div id="career-tab" class="tab-content active">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<h3 class="text-xl font-bold mb-4">적합한 직업</h3>
+<ul class="space-y-2 text-gray-600">
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-check-line"></i>
+</div>
+<div>
+<span class="font-medium">심리상담사/치료사</span>
+<p class="text-sm">타인의 감정을 이해하고 공감하는 능력을 활용할 수 있습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-check-line"></i>
+</div>
+<div>
+<span class="font-medium">마케팅/광고 크리에이티브 디렉터</span>
+<p class="text-sm">창의적인 아이디어와 사람들을 설득하는 능력을 발휘할 수 있습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-check-line"></i>
+</div>
+<div>
+<span class="font-medium">저널리스트/작가</span>
+<p class="text-sm">다양한 주제에 대한 호기심과 표현력을 활용할 수 있습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-check-line"></i>
+</div>
+<div>
+<span class="font-medium">교사/교육자</span>
+<p class="text-sm">학생들에게 영감을 주고 창의적인 학습 환경을 조성할 수 있습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-check-line"></i>
+</div>
+<div>
+<span class="font-medium">기업가/스타트업 창업자</span>
+<p class="text-sm">혁신적인 아이디어와 사람들을 모으는 능력을 활용할 수 있습니다.</p>
+</div>
+</li>
+</ul>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-4">학습 스타일</h3>
+<div class="space-y-4">
+<div class="bg-blue-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">창의적 접근</h4>
+<p class="text-sm text-gray-600">
+ENFP는 창의적인 학습 환경에서 가장 잘 배웁니다. 개념을 탐구하고 새로운 아이디어를 발견하는 것을 즐기며, 다양한 관점에서 주제를 접근하는 것을 선호합니다.
+</p>
+</div>
+<div class="bg-blue-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">그룹 학습</h4>
+<p class="text-sm text-gray-600">
+다른 사람들과 함께 배우고 아이디어를 공유하는 것이 ENFP에게 효과적입니다. 토론, 브레인스토밍, 그룹 프로젝트는 학습 동기를 높이고 다양한 관점을 얻는 데 도움이 됩니다.
+</p>
+</div>
+<div class="bg-blue-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">의미 중심 학습</h4>
+<p class="text-sm text-gray-600">
+ENFP는 학습 내용이 자신의 가치와 관심사와 연결될 때 더 효과적으로 배웁니다. 단순한 사실보다는 개념의 의미와 실제 적용에 초점을 맞추는 것이 중요합니다.
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 연애/인간관계 탭 -->
+<div id="relationships-tab" class="tab-content hidden">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<h3 class="text-xl font-bold mb-4">연애 스타일</h3>
+<p class="text-gray-600 mb-4">
+ENFP는 열정적이고 낭만적인 연인입니다. 관계에서 진정성과 깊은 정서적 연결을 추구하며, 파트너의 성장과 발전을 적극적으로 지원합니다. 새로운 경험을 함께 탐험하고 싶어하며, 관계가 정체되거나 일상적이 되는 것을 피하려고 합니다.
+</p>
+<h4 class="font-bold mb-2">ENFP의 연애 특징:</h4>
+<ul class="space-y-2 text-gray-600 mb-4">
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-heart-line"></i>
+</div>
+<span>깊은 대화와 정서적 교류를 중요시합니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-heart-line"></i>
+</div>
+<span>파트너의 독립성과 개성을 존중합니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-heart-line"></i>
+</div>
+<span>갈등을 피하기보다는 솔직한 소통을 선호합니다.</span>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-heart-line"></i>
+</div>
+<span>즉흥적인 깜짝 이벤트와 로맨틱한 제스처를 좋아합니다.</span>
+</li>
+</ul>
+<h4 class="font-bold mb-2">잘 맞는 MBTI 유형:</h4>
+<div class="flex flex-wrap gap-2 mb-2">
+<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">INTJ</span>
+<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">INFJ</span>
+<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">ENTJ</span>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-4">친구/가족 관계</h3>
+<p class="text-gray-600 mb-4">
+ENFP는 사회적이고 따뜻한 성격으로, 다양한 사람들과 쉽게 친해질 수 있습니다. 깊고 의미 있는 관계를 형성하는 것을 중요시하며, 주변 사람들에게 영감과 지원을 제공합니다.
+</p>
+<div class="bg-purple-50 p-4 rounded-lg mb-4">
+<h4 class="font-medium mb-2">친구 관계에서</h4>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 진정성 있고 깊은 대화를 나누는 친구를 선호합니다.</li>
+<li>• 다양한 친구 그룹을 가지고 있으며, 각 관계에 열정을 쏟습니다.</li>
+<li>• 친구들의 문제를 해결하는 데 도움을 주는 것을 좋아합니다.</li>
+<li>• 새로운 경험과 모험을 함께할 친구를 찾습니다.</li>
+</ul>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">가족 관계에서</h4>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 가족 구성원 각자의 개성과 잠재력을 존중합니다.</li>
+<li>• 가족 내 갈등을 해결하는 중재자 역할을 자주 맡습니다.</li>
+<li>• 가족 활동에 창의성과 즐거움을 더하는 역할을 합니다.</li>
+<li>• 가족 구성원의 감정적 필요에 민감하게 반응합니다.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- 스트레스 관리 탭 -->
+<div id="stress-tab" class="tab-content hidden">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<h3 class="text-xl font-bold mb-4">스트레스 요인</h3>
+<ul class="space-y-3 text-gray-600">
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-red-500 mr-2 mt-0.5">
+<i class="ri-error-warning-line"></i>
+</div>
+<div>
+<span class="font-medium">엄격한 규칙과 구조</span>
+<p class="text-sm">자유롭고 창의적인 ENFP는 지나치게 엄격한 규칙과 절차에 갇히면 스트레스를 받습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-red-500 mr-2 mt-0.5">
+<i class="ri-error-warning-line"></i>
+</div>
+<div>
+<span class="font-medium">반복적인 일상 업무</span>
+<p class="text-sm">단조롭고 반복적인 작업은 ENFP의 에너지와 동기를 빠르게 소진시킵니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-red-500 mr-2 mt-0.5">
+<i class="ri-error-warning-line"></i>
+</div>
+<div>
+<span class="font-medium">갈등과 비판</span>
+<p class="text-sm">ENFP는 감정적으로 민감하여 갈등 상황이나 강한 비판에 큰 스트레스를 받을 수 있습니다.</p>
+</div>
+</li>
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-red-500 mr-2 mt-0.5">
+<i class="ri-error-warning-line"></i>
+</div>
+<div>
+<span class="font-medium">가치 충돌</span>
+<p class="text-sm">자신의 핵심 가치와 충돌하는 환경이나 상황에서 큰 불편함을 느낍니다.</p>
+</div>
+</li>
+</ul>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-4">스트레스 관리 전략</h3>
+<div class="space-y-4">
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">창의적 표현</h4>
+<p class="text-sm text-gray-600">
+예술, 글쓰기, 음악 등 창의적인 활동을 통해 감정을 표현하고 스트레스를 해소하세요. ENFP에게 창의적 표현은 강력한 치유 도구가 될 수 있습니다.
+</p>
+</div>
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">의미 있는 대화</h4>
+<p class="text-sm text-gray-600">
+신뢰할 수 있는 친구나 가족과 깊은 대화를 나누는 것은 ENFP가 생각을 정리하고 감정을 처리하는 데 도움이 됩니다. 자신의 감정과 생각을 표현할 수 있는 안전한 공간을 찾으세요.
+</p>
+</div>
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">새로운 경험 추구</h4>
+<p class="text-sm text-gray-600">
+일상에서 벗어나 새로운 장소를 방문하거나 새로운 활동을 시도하는 것은 ENFP에게 활력을 줍니다. 여행, 새로운 취미, 또는 새로운 학습 경험을 통해 영감을 얻으세요.
+</p>
+</div>
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-medium mb-2">명상과 자기 성찰</h4>
+<p class="text-sm text-gray-600">
+ENFP는 종종 외부 세계에 너무 집중하여 내면의 목소리를 놓칠 수 있습니다. 명상, 일기 쓰기, 또는 조용한 산책을 통해 자신의 내면과 재연결하는 시간을 가지세요.
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- MBTI 궁합/관계 섹션 -->
+<section id="compatibility" class="py-16 bg-gray-50">
+<div class="container mx-auto px-4">
+<h2 class="text-3xl font-bold text-center mb-12">MBTI 궁합/관계</h2>
+<div class="bg-white p-8 rounded-lg shadow-md mb-12">
+<h3 class="text-xl font-bold mb-6">나와 상대방의 궁합 확인하기</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div>
+<label class="block text-gray-700 font-medium mb-2">내 MBTI 유형</label>
+<div class="relative">
+<select id="my-mbti" class="w-full border border-gray-300 rounded p-3 pr-8 appearance-none focus:outline-none focus:ring-2 focus:ring-primary">
+<option value="">선택하세요</option>
+<option value="INTJ">INTJ (전략가)</option>
+<option value="INTP">INTP (논리학자)</option>
+<option value="ENTJ">ENTJ (통솔자)</option>
+<option value="ENTP">ENTP (변론가)</option>
+<option value="INFJ">INFJ (옹호자)</option>
+<option value="INFP">INFP (중재자)</option>
+<option value="ENFJ">ENFJ (선도자)</option>
+<option value="ENFP">ENFP (활동가)</option>
+<option value="ISTJ">ISTJ (현실주의자)</option>
+<option value="ISFJ">ISFJ (수호자)</option>
+<option value="ESTJ">ESTJ (경영자)</option>
+<option value="ESFJ">ESFJ (집정관)</option>
+<option value="ISTP">ISTP (장인)</option>
+<option value="ISFP">ISFP (모험가)</option>
+<option value="ESTP">ESTP (사업가)</option>
+<option value="ESFP">ESFP (연예인)</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+<i class="ri-arrow-down-s-line text-gray-400"></i>
+</div>
+</div>
+</div>
+<div>
+<label class="block text-gray-700 font-medium mb-2">상대방 MBTI 유형</label>
+<div class="relative">
+<select id="partner-mbti" class="w-full border border-gray-300 rounded p-3 pr-8 appearance-none focus:outline-none focus:ring-2 focus:ring-primary">
+<option value="">선택하세요</option>
+<option value="INTJ">INTJ (전략가)</option>
+<option value="INTP">INTP (논리학자)</option>
+<option value="ENTJ">ENTJ (통솔자)</option>
+<option value="ENTP">ENTP (변론가)</option>
+<option value="INFJ">INFJ (옹호자)</option>
+<option value="INFP">INFP (중재자)</option>
+<option value="ENFJ">ENFJ (선도자)</option>
+<option value="ENFP">ENFP (활동가)</option>
+<option value="ISTJ">ISTJ (현실주의자)</option>
+<option value="ISFJ">ISFJ (수호자)</option>
+<option value="ESTJ">ESTJ (경영자)</option>
+<option value="ESFJ">ESFJ (집정관)</option>
+<option value="ISTP">ISTP (장인)</option>
+<option value="ISFP">ISFP (모험가)</option>
+<option value="ESTP">ESTP (사업가)</option>
+<option value="ESFP">ESFP (연예인)</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+<i class="ri-arrow-down-s-line text-gray-400"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-center">
+<button id="check-compatibility-btn" class="px-8 py-3 bg-primary text-white font-medium !rounded-button shadow-md hover:bg-blue-600 transition-colors whitespace-nowrap">
+궁합 확인하기
+</button>
+</div>
+<div id="compatibility-result" class="hidden mt-8 p-6 bg-blue-50 rounded-lg">
+<div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+<div class="flex-shrink-0">
+<div class="w-24 h-24 rounded-full bg-primary bg-opacity-20 flex items-center justify-center">
+<span class="text-4xl font-bold text-primary">85%</span>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-2 text-center md:text-left">ENFP + INTJ: 흥미로운 궁합</h3>
+<p class="text-gray-600 mb-4">
+ENFP와 INTJ는 서로 보완적인 관계를 형성할 수 있습니다. ENFP의 열정과 창의성은 INTJ의 전략적 사고와 분석력과 잘 어울립니다. 두 유형 모두 아이디어와 가능성에 관심이 있어 지적인 대화를 즐길 수 있습니다.
+</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<h4 class="font-bold mb-2">강점</h4>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 서로의 독립성을 존중합니다.</li>
+<li>• 깊고 의미 있는 대화를 나눌 수 있습니다.</li>
+<li>• 서로 다른 관점을 통해 성장할 수 있습니다.</li>
+<li>• 두 유형 모두 지적 호기심이 강합니다.</li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-2">잠재적 어려움</h4>
+<ul class="text-sm text-gray-600 space-y-1">
+<li>• 의사소통 스타일의 차이가 있을 수 있습니다.</li>
+<li>• ENFP는 감정적 표현을 중요시하지만, INTJ는 논리를 우선시합니다.</li>
+<li>• 계획과 즉흥성 사이의 균형을 찾아야 합니다.</li>
+<li>• 결정 방식의 차이로 인한 갈등이 생길 수 있습니다.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<h3 class="text-xl font-bold text-center mb-6">MBTI 유형별 궁합 매트릭스</h3>
+<p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+아래 매트릭스를 통해 16가지 MBTI 유형 간의 궁합을 한눈에 확인할 수 있습니다. 색상이 진할수록 더 좋은 궁합을 의미합니다.
+</p>
+<div class="overflow-x-auto">
+<div class="compatibility-grid min-w-max">
+<!-- 헤더 행 -->
+<div class="compatibility-cell compatibility-header"></div>
+<div class="compatibility-cell compatibility-header">INTJ</div>
+<div class="compatibility-cell compatibility-header">INTP</div>
+<div class="compatibility-cell compatibility-header">ENTJ</div>
+<div class="compatibility-cell compatibility-header">ENTP</div>
+<div class="compatibility-cell compatibility-header">INFJ</div>
+<div class="compatibility-cell compatibility-header">INFP</div>
+<div class="compatibility-cell compatibility-header">ENFJ</div>
+<div class="compatibility-cell compatibility-header">ENFP</div>
+<div class="compatibility-cell compatibility-header">ISTJ</div>
+<div class="compatibility-cell compatibility-header">ISFJ</div>
+<div class="compatibility-cell compatibility-header">ESTJ</div>
+<div class="compatibility-cell compatibility-header">ESFJ</div>
+<div class="compatibility-cell compatibility-header">ISTP</div>
+<div class="compatibility-cell compatibility-header">ISFP</div>
+<div class="compatibility-cell compatibility-header">ESTP</div>
+<div class="compatibility-cell compatibility-header">ESFP</div>
+<!-- INTJ 행 -->
+<div class="compatibility-cell compatibility-header">INTJ</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-excellent">85%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-challenging">40%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-challenging">40%</div>
+<div class="compatibility-cell compatibility-difficult">35%</div>
+<!-- INTP 행 -->
+<div class="compatibility-cell compatibility-header">INTP</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-excellent">80%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">40%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<!-- 나머지 행들도 같은 방식으로 추가 -->
+<!-- ENTJ 행 -->
+<div class="compatibility-cell compatibility-header">ENTJ</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<!-- ENTP 행 -->
+<div class="compatibility-cell compatibility-header">ENTP</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-excellent">80%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<!-- INFJ 행 -->
+<div class="compatibility-cell compatibility-header">INFJ</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-average">65%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-good">75%</div>
+<div class="compatibility-cell compatibility-good">70%</div>
+<div class="compatibility-cell compatibility-excellent">85%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-challenging">40%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+<div class="compatibility-cell compatibility-challenging">45%</div>
+<div class="compatibility-cell compatibility-average">60%</div>
+<div class="compatibility-cell compatibility-challenging">40%</div>
+<div class="compatibility-cell compatibility-average">55%</div>
+</div>
+</div>
+<div class="mt-8 text-center">
+<button id="show-full-matrix-btn" class="px-6 py-2 border border-primary text-primary !rounded-button hover:bg-blue-50 transition-colors whitespace-nowrap">
+전체 궁합 매트릭스 보기
+</button>
+</div>
+</div>
+</section>
+<!-- 푸터 -->
+<footer class="bg-gray-800 text-white py-12">
+<div class="container mx-auto px-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div>
+<h3 class="text-xl font-bold mb-4">MBTI의 모든 것</h3>
+<p class="text-gray-400 mb-4">
+MBTI를 통해 자신과 타인을 더 깊이 이해하고 더 나은 관계를 형성하세요.
+</p>
+<div class="flex space-x-4">
+<a href="#" class="text-gray-400 hover:text-white transition-colors">
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-facebook-fill"></i>
+</div>
+</a>
+<a href="#" class="text-gray-400 hover:text-white transition-colors">
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-twitter-fill"></i>
+</div>
+</a>
+<a href="#" class="text-gray-400 hover:text-white transition-colors">
+<div class="w-8 h-8 flex items-center justify-center">
+<i class="ri-instagram-fill"></i>
+</div>
+</a>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-bold mb-4">빠른 링크</h3>
+<ul class="space-y-2">
+<li><a href="#home" class="text-gray-400 hover:text-white transition-colors">홈</a></li>
+<li><a href="#test" class="text-gray-400 hover:text-white transition-colors">MBTI 테스트</a></li>
+<li><a href="#types" class="text-gray-400 hover:text-white transition-colors">유형별 탐색</a></li>
+<li><a href="#compatibility" class="text-gray-400 hover:text-white transition-colors">MBTI 궁합/관계</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-lg font-bold mb-4">뉴스레터 구독</h3>
+<p class="text-gray-400 mb-4">
+최신 MBTI 연구 및 인사이트를 받아보세요.
+</p>
+<div class="flex">
+<input type="email" placeholder="이메일 주소" class="px-4 py-2 w-full rounded-l-button border-none focus:outline-none text-gray-800">
+<button class="bg-primary text-white px-4 py-2 rounded-r-button hover:bg-blue-600 transition-colors whitespace-nowrap">
+구독하기
+</button>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+<p>© 2025 MBTI의 모든 것. All rights reserved.</p>
+<p class="mt-2 text-sm">
+MBTI®는 Myers-Briggs Type Indicator®의 등록 상표입니다. 이 웹사이트는 Myers & Briggs Foundation과 관련이 없습니다.
+</p>
+</div>
+</div>
+</footer>
+<script id="mobile-menu-script">
+document.addEventListener('DOMContentLoaded', function() {
+const mobileMenuButton = document.getElementById('mobile-menu-button');
+const mobileMenu = document.getElementById('mobile-menu');
+mobileMenuButton.addEventListener('click', function() {
+mobileMenu.classList.toggle('hidden');
+});
+// 모바일 메뉴 링크 클릭 시 메뉴 닫기
+const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+mobileMenuLinks.forEach(link => {
+link.addEventListener('click', function() {
+mobileMenu.classList.add('hidden');
+});
+});
+});
+</script>
+<script id="mbti-test-script">
+document.addEventListener('DOMContentLoaded', function() {
+const startTestBtn = document.getElementById('start-test-btn');
+const testIntro = document.getElementById('test-intro');
+const testQuestions = document.getElementById('test-questions');
+const testResult = document.getElementById('test-result');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const currentQuestionEl = document.getElementById('current-question');
+const progressBar = document.querySelector('.progress');
+const questionContainer = document.getElementById('question-container');
+const restartTestBtn = document.getElementById('restart-test-btn');
+let currentQuestion = 1;
+const totalQuestions = 50;
+// 테스트 시작하기 버튼 클릭
+if (startTestBtn) {
+startTestBtn.addEventListener('click', function() {
+testIntro.classList.add('hidden');
+testQuestions.classList.remove('hidden');
+updateProgress();
+});
+}
+// 이전 질문 버튼 클릭
+if (prevBtn) {
+prevBtn.addEventListener('click', function() {
+if (currentQuestion > 1) {
+showQuestion(currentQuestion - 1);
+}
+});
+}
+// 다음 질문 버튼 클릭
+if (nextBtn) {
+nextBtn.addEventListener('click', function() {
+// 현재 질문에 답변했는지 확인
+const currentQuestionCard = document.querySelector(`.question-card[data-question="${currentQuestion}"]`);
+const selectedOption = currentQuestionCard.querySelector('.likert-circle.selected');
+if (!selectedOption) {
+alert('질문에 답변해주세요.');
+return;
+}
+if (currentQuestion < totalQuestions) {
+showQuestion(currentQuestion + 1);
+} else {
+// 테스트 완료, 결과 페이지로 이동
+testQuestions.classList.add('hidden');
+testResult.classList.remove('hidden');
+// 스크롤을 결과 페이지로 이동
+testResult.scrollIntoView({ behavior: 'smooth' });
+}
+});
+}
+// 테스트 다시 하기 버튼 클릭
+if (restartTestBtn) {
+restartTestBtn.addEventListener('click', function() {
+testResult.classList.add('hidden');
+testIntro.classList.remove('hidden');
+// 모든 선택 초기화
+document.querySelectorAll('.likert-circle').forEach(circle => {
+circle.classList.remove('selected');
+});
+// 첫 번째 질문으로 돌아가기
+currentQuestion = 1;
+showQuestion(currentQuestion);
+});
+}
+// 질문 표시 함수
+function showQuestion(questionNumber) {
+// 모든 질문 카드 숨기기
+document.querySelectorAll('.question-card').forEach(card => {
+card.classList.remove('active');
+});
+// 선택한 질문 카드 표시
+const questionCard = document.querySelector(`.question-card[data-question="${questionNumber}"]`);
+if (questionCard) {
+questionCard.classList.add('active');
+currentQuestion = questionNumber;
+currentQuestionEl.textContent = currentQuestion;
+// 이전 버튼 활성화/비활성화
+prevBtn.disabled = currentQuestion === 1;
+// 다음 버튼 텍스트 변경
+nextBtn.textContent = currentQuestion === totalQuestions ? '결과 보기' : '다음 질문';
+updateProgress();
+}
+}
+// 진행 상태 업데이트
+function updateProgress() {
+const progressPercentage = (currentQuestion / totalQuestions) * 100;
+progressBar.style.width = `${progressPercentage}%`;
+}
+// 리커트 척도 선택 이벤트 설정
+document.querySelectorAll('.likert-option').forEach(option => {
+option.addEventListener('click', function() {
+// 같은 질문 내의 다른 선택지 선택 해제
+const questionCard = this.closest('.question-card');
+questionCard.querySelectorAll('.likert-circle').forEach(circle => {
+circle.classList.remove('selected');
+});
+// 선택한 옵션 표시
+this.querySelector('.likert-circle').classList.add('selected');
+});
+});
+// 초기 질문 표시
+showQuestion(1);
+// 추가 질문 생성 (질문 3 이후)
+for (let i = 4; i <= 50; i++) {
+const questionText = getQuestionText(i);
+const questionCard = document.createElement('div');
+questionCard.className = 'question-card';
+questionCard.dataset.question = i;
+questionCard.innerHTML = `
+<h3 class="text-lg font-medium mb-6">${i}. ${questionText}</h3>
+<div class="likert-scale">
+<div class="likert-option" data-value="1">
+<div class="likert-circle"></div>
+<span class="likert-label">전혀 그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="2">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇지 않다</span>
+</div>
+<div class="likert-option" data-value="3">
+<div class="likert-circle"></div>
+<span class="likert-label">보통이다</span>
+</div>
+<div class="likert-option" data-value="4">
+<div class="likert-circle"></div>
+<span class="likert-label">그렇다</span>
+</div>
+<div class="likert-option" data-value="5">
+<div class="likert-circle"></div>
+<span class="likert-label">매우 그렇다</span>
+</div>
+</div>
+`;
+questionContainer.appendChild(questionCard);
+// 리커트 척도 선택 이벤트 설정
+questionCard.querySelectorAll('.likert-option').forEach(option => {
+option.addEventListener('click', function() {
+// 같은 질문 내의 다른 선택지 선택 해제
+questionCard.querySelectorAll('.likert-circle').forEach(circle => {
+circle.classList.remove('selected');
+});
+// 선택한 옵션 표시
+this.querySelector('.likert-circle').classList.add('selected');
+});
+});
+}
+// 질문 텍스트 가져오기
+function getQuestionText(questionNumber) {
+const questions = [
+"", // 인덱스 0은 사용하지 않음
+"새로운 사람들과의 만남이 즐겁고 에너지가 생긴다.",
+"파티보다는 혼자 조용한 시간을 보내는 것이 더 편하다.",
+"생각을 정리하려면 누군가와 이야기하는 것이 도움이 된다.",
+"중요한 결정을 내릴 때 혼자 고민하는 편이다.",
+"즉흥적인 대화를 잘 즐기며 끊임없이 말하는 편이다.",
+"하루를 마치면 사람들과의 시간이 에너지를 소모시킨다.",
+"사람 많은 모임에 참여하는 것이 기대된다.",
+"발표나 토론보다는 글로 생각을 표현하는 것을 선호한다.",
+"말보다 글로 의사 표현할 때 더 자신 있다.",
+"혼자 여행하는 것이 오히려 더 편하고 자유롭다고 느낀다.",
+"현실적이고 실용적인 정보에 더 집중한다.",
+"추상적인 개념보다는 구체적인 사실을 선호한다.",
+"새로운 아이디어를 떠올리는 것이 자연스럽다.",
+"과거 경험을 바탕으로 현재를 판단한다.",
+"상상력보다 실증적인 자료를 더 신뢰한다.",
+"미래 가능성을 예측하는 일에 흥미를 느낀다.",
+"매뉴얼이나 설명서를 꼼꼼히 읽는 편이다.",
+"하나의 사물을 여러 방식으로 해석할 수 있다.",
+"현재에 집중하고 지금 눈에 보이는 것이 중요하다.",
+"감각보다는 직감에 따라 행동하는 경우가 많다.",
+"결정을 내릴 때 논리와 객관성을 가장 중요하게 여긴다.",
+"갈등이 생기면 상대의 감정보다 사실에 집중한다.",
+"다른 사람의 입장을 쉽게 공감할 수 있다.",
+"일보다 사람과의 관계가 더 중요하다고 생각한다.",
+"어떤 문제든 이성적으로 분석해서 해결하려 한다.",
+"누군가의 잘못을 지적할 때 감정보다 진실이 우선이다.",
+"상대방이 상처받을까 걱정돼 직설적으로 말하지 못할 때가 있다.",
+"효율성과 성과가 인간관계보다 더 중요하다고 느낀다.",
+"감정이 앞설 때는 결정을 내리기 어렵다.",
+"사람들 간의 조화와 분위기를 항상 고려한다.",
+"계획 없이 일을 시작하면 불안하다.",
+"일정을 미리 세우고 지키는 것을 선호한다.",
+"갑작스러운 변화에 유연하게 대처할 수 있다.",
+"즉흥적으로 여행을 떠나는 것이 즐겁다.",
+"마감 전에 모든 일을 끝내는 편이다.",
+"여유가 생기면 미뤘던 일을 나중에 처리한다.",
+"집안 정리나 데스크 정돈을 자주 한다.",
+"유동적인 상황에서 더 창의적인 결과를 낼 수 있다.",
+"'완벽한 마무리'가 중요한 목표다.",
+"일처리를 할 때 다양하고 열린 선택지를 유지하고 싶다.",
+"팀 프로젝트에서는 리더 역할을 맡는 것이 자연스럽다.",
+"일상에 변화를 주는 것이 에너지와 동기를 부여한다.",
+"다른 사람의 말보다 내 직감을 더 믿는다.",
+"새로운 경험을 위해 미지의 상황에 뛰어드는 것이 두렵지 않다.",
+"타인의 감정 변화를 잘 알아차리는 편이다.",
+"규칙과 체계가 정해진 환경에서 더 잘 집중할 수 있다.",
+"감정보다는 결과를 중시해야 일이 잘 된다고 생각한다.",
+"'왜'라는 질문보다는 '어떻게'라는 질문이 더 중요하다고 느낀다.",
+"새로운 사람들과 어울릴 때 먼저 말을 거는 편이다.",
+"결정 내리기보다 여러 가능성을 열어두는 것이 더 편하다."
+];
+return questions[questionNumber] || `질문 ${questionNumber}`;
+}
+});
+</script>
+<script id="mbti-types-script">
+document.addEventListener('DOMContentLoaded', function() {
+// 유형별 탐색 탭 기능
+const typeTabs = document.querySelectorAll('[data-group]');
+const mbtiCards = document.querySelectorAll('.mbti-card');
+typeTabs.forEach(tab => {
+tab.addEventListener('click', function() {
+// 모든 탭 비활성화
+typeTabs.forEach(t => t.classList.remove('active'));
+// 클릭한 탭 활성화
+this.classList.add('active');
+const group = this.dataset.group;
+// 모든 카드 표시
+mbtiCards.forEach(card => {
+card.style.display = 'block';
+});
+// 선택한 그룹이 'all'이 아니면 필터링
+if (group !== 'all') {
+mbtiCards.forEach(card => {
+if (!card.classList.contains(`group-${group}`)) {
+card.style.display = 'none';
+}
+});
+}
+});
+});
+// 유형 상세 정보 탭 기능
+const detailTabs = document.querySelectorAll('[data-tab]');
+const tabContents = document.querySelectorAll('.tab-content');
+detailTabs.forEach(tab => {
+tab.addEventListener('click', function() {
+// 모든 탭 비활성화
+detailTabs.forEach(t => t.classList.remove('active'));
+// 모든 콘텐츠 숨기기
+tabContents.forEach(content => {
+content.classList.add('hidden');
+content.classList.remove('active');
+});
+// 클릭한 탭 활성화
+this.classList.add('active');
+// 해당 콘텐츠 표시
+const tabId = this.dataset.tab;
+const content = document.getElementById(`${tabId}-tab`);
+if (content) {
+content.classList.remove('hidden');
+content.classList.add('active');
+}
+});
+});
+});
+</script>
+<script id="mbti-compatibility-script">
+document.addEventListener('DOMContentLoaded', function() {
+const checkCompatibilityBtn = document.getElementById('check-compatibility-btn');
+const compatibilityResult = document.getElementById('compatibility-result');
+const myMbtiSelect = document.getElementById('my-mbti');
+const partnerMbtiSelect = document.getElementById('partner-mbti');
+const showFullMatrixBtn = document.getElementById('show-full-matrix-btn');
+if (checkCompatibilityBtn) {
+checkCompatibilityBtn.addEventListener('click', function() {
+const myMbti = myMbtiSelect.value;
+const partnerMbti = partnerMbtiSelect.value;
+if (!myMbti || !partnerMbti) {
+alert('두 MBTI 유형을 모두 선택해주세요.');
+return;
+}
+// 실제로는 여기서 두 유형의 궁합을 계산하고 결과를 표시
+// 지금은 예시 결과만 표시
+compatibilityResult.classList.remove('hidden');
+// 결과 영역으로 스크롤
+compatibilityResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+}
+if (showFullMatrixBtn) {
+showFullMatrixBtn.addEventListener('click', function() {
+// 전체 매트릭스 표시 로직
+// 예: 모달 창 표시 또는 새 페이지로 이동
+alert('전체 궁합 매트릭스 기능은 준비 중입니다.');
+});
+}
+});
+</script>
+<!-- MBTI 상세 정보 모달 -->
+<div id="mbti-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+<div class="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl mx-4">
+<div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+<h2 class="text-2xl font-bold text-gray-800" id="modal-title">MBTI 상세 정보</h2>
+<button id="close-modal-btn" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="p-6" id="modal-content">
+<!-- Content will be dynamically inserted here -->
+</div>
+</div>
+</div>
+<script id="mbti-detail-modal-script">
+document.addEventListener('DOMContentLoaded', function() {
+const modal = document.getElementById('mbti-detail-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const modalTitle = document.getElementById('modal-title');
+const modalContent = document.getElementById('modal-content');
+// MBTI 유형별 상세 정보
+const mbtiDetails = {
+'INTJ': {
+title: 'INTJ - 전략가',
+color: '#546E7A', 
+description: '분석적이고 전략적인 사고를 가진 혁신가',
+characteristics: [
+'논리적이고 객관적인 분석을 선호',
+'장기적인 계획과 전략 수립에 능숙',
+'독립적이며 자기주도적인 성향',
+'지적 호기심이 강하고 새로운 지식 습득을 즐김'
+],
+strengths: [
+'복잡한 문제 해결 능력',
+'전략적 사고와 계획 수립',
+'높은 업무 완성도',
+'독창적인 아이디어 제시'
+],
+weaknesses: [
+'감정 표현의 어려움',
+'타인과의 공감 부족',
+'지나친 완벽주의',
+'융통성 부족'
+],
+careers: [
+'전략 컨설턴트',
+'데이터 분석가',
+'연구원',
+'프로젝트 매니저',
+'투자 분석가'
+],
+relationships: {
+romantic: '논리적이면서도 지적 성장을 추구하는 파트너와 잘 맞음',
+friendship: '깊이 있는 대화와 지적 교류가 가능한 친구 관계 선호',
+workplace: '독립적인 업무 환경에서 최고의 성과를 발휘'
+}
+},
+'INTP': {
+title: 'INTP - 논리학자',
+color: '#78909C',
+description: '끊임없이 새로운 지식을 추구하는 혁신적인 사색가',
+characteristics: [
+'논리적이고 분석적인 사고방식',
+'지적 호기심이 매우 강함',
+'독창적인 문제 해결 능력',
+'객관적이고 이성적인 판단 선호'
+],
+strengths: [
+'뛰어난 추상적 사고력',
+'복잡한 이론 이해와 개발 능력',
+'창의적인 문제 해결 방식',
+'지식 탐구에 대한 열정'
+],
+weaknesses: [
+'사회적 상호작용의 어려움',
+'실용적인 일상 업무에 대한 무관심',
+'과도한 완벽주의적 성향',
+'결정을 미루는 경향'
+],
+careers: [
+'소프트웨어 개발자',
+'과학 연구원',
+'철학자/교수',
+'데이터 사이언티스트',
+'시스템 분석가'
+],
+relationships: {
+romantic: '지적 호기심을 공유하고 독립성을 존중하는 파트너와 잘 맞음',
+friendship: '깊이 있는 토론과 아이디어 교환이 가능한 친구 관계 선호',
+workplace: '자율성이 보장되고 창의적인 문제 해결이 요구되는 환경에서 뛰어난 성과'
+}
+},
+'ENTJ': {
+title: 'ENTJ - 통솔자',
+color: '#455A64',
+description: '대담하고 상상력이 풍부한 강한 의지의 리더',
+characteristics: [
+'카리스마 있는 리더십',
+'전략적 사고와 실행력',
+'효율성과 생산성 중시',
+'목표 지향적이고 야망이 큼'
+],
+strengths: [
+'뛰어난 조직력과 리더십',
+'장기적 비전 수립 능력',
+'결단력 있는 의사결정',
+'높은 성취 동기'
+],
+weaknesses: [
+'지나친 독단적 성향',
+'감정적 배려 부족',
+'완벽주의로 인한 압박감',
+'인내심 부족'
+],
+careers: [
+'최고경영자(CEO)',
+'경영 컨설턴트',
+'기업가',
+'정치인',
+'투자 전문가'
+],
+relationships: {
+romantic: '지적 도전과 성장을 함께할 수 있는 파트너 선호',
+friendship: '목표 지향적이고 성공 추구하는 친구 관계 형성',
+workplace: '리더십을 발휘하고 조직을 이끄는 역할에서 탁월'
+}
+},
+'ENTP': {
+title: 'ENTP - 변론가',
+color: '#607D8B',
+description: '지적 도전을 즐기는 영리하고 호기심 많은 사상가',
+characteristics: [
+'창의적이고 혁신적인 사고',
+'논쟁과 토론을 즐김',
+'다재다능하고 적응력이 뛰어남',
+'새로운 아이디어에 대한 열정'
+],
+strengths: [
+'뛰어난 문제 해결 능력',
+'혁신적인 아이디어 창출',
+'빠른 상황 적응력',
+'설득력 있는 의사소통'
+],
+weaknesses: [
+'일관성과 인내심 부족',
+'감정적 민감성 결여',
+'규칙과 체계 무시',
+'마무리가 약함'
+],
+careers: [
+'기업가',
+'변호사',
+'정치 전략가',
+'마케팅 디렉터',
+'혁신 컨설턴트'
+],
+relationships: {
+romantic: '지적 자극과 자유로운 토론이 가능한 파트너 선호',
+friendship: '창의적이고 도전적인 대화가 가능한 친구 관계 추구',
+workplace: '혁신적인 아이디어를 제시하고 변화를 주도하는 역할'
+}
+},
+'INFJ': {
+title: 'INFJ - 옹호자',
+color: '#7E57C2',
+description: '조용하고 신비로우며 영감을 주는 이상주의자',
+characteristics: [
+'깊은 통찰력과 직관력',
+'강한 도덕적 신념',
+'타인의 감정에 민감',
+'완벽주의적 성향'
+],
+strengths: [
+'뛰어난 공감 능력',
+'창의적 문제 해결',
+'장기적 비전 수립',
+'성실하고 책임감 있음'
+],
+weaknesses: [
+'지나친 이상주의',
+'과도한 자기비판',
+'갈등 회피 성향',
+'스트레스에 취약'
+],
+careers: [
+'상담사/심리치료사',
+'작가/예술가',
+'교육자',
+'비영리 단체 활동가',
+'인사 관리자'
+],
+relationships: {
+romantic: '깊은 정서적 교감이 가능한 파트너와 잘 맞음',
+friendship: '진정성 있는 소수의 친밀한 관계 선호',
+workplace: '조용하지만 영향력 있는 리더십 발휘'
+}
+},
+'INFP': {
+title: 'INFP - 중재자',
+color: '#9575CD',
+description: '이상적이고 공감 능력이 뛰어난 성격',
+characteristics: [
+'강한 개인적 가치관',
+'창의적이고 예술적인 성향',
+'깊은 감정과 공감 능력',
+'독립적인 사고방식'
+],
+strengths: [
+'뛰어난 창의성',
+'강한 공감 능력',
+'유연한 적응력',
+'진정성 있는 소통'
+],
+weaknesses: [
+'현실과 이상의 괴리',
+'우유부단한 결정',
+'과도한 감정이입',
+'비판에 민감'
+],
+careers: [
+'작가/시인',
+'심리상담사',
+'예술가',
+'교사',
+'사회복지사'
+],
+relationships: {
+romantic: '감정적 교류와 가치관을 공유할 수 있는 파트너 선호',
+friendship: '깊이 있는 일대일 관계를 중시',
+workplace: '개인의 가치와 일치하는 의미 있는 일을 추구'
+}
+},
+'ENFJ': {
+title: 'ENFJ - 선도자',
+color: '#5E35B1',
+description: '카리스마 있고 영감을 주는 지도자',
+characteristics: [
+'타인의 성장을 돕는데 열정적',
+'뛰어난 의사소통 능력',
+'카리스마 있는 리더십',
+'강한 책임감'
+],
+strengths: [
+'뛰어난 대인관계 능력',
+'영감을 주는 리더십',
+'조직력과 추진력',
+'명확한 비전 제시'
+],
+weaknesses: [
+'과도한 자기희생',
+'지나친 완벽주의',
+'비판에 예민',
+'개인 시간 부족'
+],
+careers: [
+'교육자',
+'인사 관리자',
+'비영리 단체 리더',
+'마케팅 매니저',
+'커뮤니케이션 전문가'
+],
+relationships: {
+romantic: '성장과 발전을 함께 추구하는 파트너 선호',
+friendship: '의미 있는 관계 형성과 유지에 능숙',
+workplace: '팀을 이끌고 동기를 부여하는 역할'
+}
+},
+'ENFP': {
+title: 'ENFP - 활동가',
+color: '#673AB7',
+description: '열정적이고 창의적인 자유로운 영혼',
+characteristics: [
+'열정적이고 에너지 넘침',
+'창의적이고 혁신적인 사고',
+'뛰어난 의사소통 능력',
+'새로운 가능성 발견'
+],
+strengths: [
+'다재다능한 능력',
+'강한 공감 능력',
+'창의적 문제 해결',
+'적응력과 유연성'
+],
+weaknesses: [
+'집중력 부족',
+'우선순위 설정 어려움',
+'감정 기복',
+'일상적 업무 어려움'
+],
+careers: [
+'예술가/디자이너',
+'마케팅 크리에이티브 디렉터',
+'상담사',
+'저널리스트',
+'이벤트 플래너'
+],
+relationships: {
+romantic: '자유롭고 진정성 있는 관계 추구',
+friendship: '다양한 사람들과 깊은 관계 형성',
+workplace: '창의적이고 자유로운 환경에서 최고의 성과'
+}
+},
+'ISTJ': {
+title: 'ISTJ - 현실주의자',
+color: '#43A047',
+description: '사실을 중시하는 믿음직한 현실주의자',
+characteristics: [
+'체계적이고 조직적인 성향',
+'책임감과 신뢰성이 높음',
+'실용적이고 현실적인 판단',
+'전통과 규칙 중시'
+],
+strengths: [
+'뛰어난 조직력',
+'높은 책임감',
+'정확성과 신뢰성',
+'체계적인 업무 처리'
+],
+weaknesses: [
+'변화에 대한 저항',
+'융통성 부족',
+'감정 표현의 어려움',
+'새로운 시도를 꺼림'
+],
+careers: [
+'회계사',
+'법률가',
+'프로젝트 매니저',
+'군인/경찰',
+'품질 관리자'
+],
+relationships: {
+romantic: '안정적이고 신뢰할 수 있는 관계 추구',
+friendship: '오랫동안 지속되는 신뢰 관계 형성',
+workplace: '체계적이고 안정적인 환경에서 뛰어난 성과'
+}
+},
+'ISFJ': {
+title: 'ISFJ - 수호자',
+color: '#66BB6A',
+description: '헌신적이고 따뜻한 수호자',
+characteristics: [
+'세심하고 배려심이 깊음',
+'책임감이 강함',
+'전통과 안정성 중시',
+'실용적인 문제 해결'
+],
+strengths: [
+'뛰어난 관찰력',
+'높은 공감 능력',
+'실용적인 지원',
+'신뢰성과 헌신'
+],
+weaknesses: [
+'자기주장 부족',
+'변화에 대한 두려움',
+'과도한 자기희생',
+'스트레스에 취약'
+],
+careers: [
+'간호사',
+'초등학교 교사',
+'행정 지원',
+'사회복지사',
+'인테리어 디자이너'
+],
+relationships: {
+romantic: '안정적이고 헌신적인 관계 추구',
+friendship: '소수의 깊은 우정 관계 선호',
+workplace: '체계적이고 협력적인 환경에서 최고의 성과'
+}
+},
+'ESTJ': {
+title: 'ESTJ - 경영자',
+color: '#2E7D32',
+description: '실용적이고 사실 중심적인 관리자',
+characteristics: [
+'체계적인 조직력',
+'명확한 기준과 규칙 중시',
+'책임감과 신뢰성',
+'효율성 추구'
+],
+strengths: [
+'뛰어난 실행력',
+'체계적인 관리 능력',
+'명확한 의사결정',
+'높은 책임감'
+],
+weaknesses: [
+'감정적 공감 부족',
+'융통성 부족',
+'지나친 완벽주의',
+'새로운 방식에 대한 거부감'
+],
+careers: [
+'경영자',
+'군인/경찰 간부',
+'금융 전문가',
+'프로젝트 관리자',
+'법률가'
+],
+relationships: {
+romantic: '명확하고 안정적인 관계 선호',
+friendship: '신뢰할 수 있는 실용적 관계 형성',
+workplace: '체계적이고 효율적인 환경에서 리더십 발휘'
+}
+},
+'ESFJ': {
+title: 'ESFJ - 집정관',
+color: '#4CAF50',
+description: '배려심 깊고 사교적인 성격',
+characteristics: [
+'타인을 돕는데 열정적',
+'사교적이고 협력적',
+'체계적인 일 처리',
+'전통과 규범 중시'
+],
+strengths: [
+'뛰어난 대인관계',
+'높은 책임감',
+'실용적인 문제 해결',
+'조직력과 계획성'
+],
+weaknesses: [
+'과도한 자기희생',
+'비판에 민감',
+'변화에 대한 두려움',
+'갈등 회피'
+],
+careers: [
+'인사 관리자',
+'교사',
+'간호사',
+'고객 서비스 매니저',
+'이벤트 플래너'
+],
+relationships: {
+romantic: '조화롭고 안정적인 관계 추구',
+friendship: '따뜻하고 지지적인 우정 관계 형성',
+workplace: '협력적이고 체계적인 환경에서 성과'
+}
+},
+'ISTP': {
+title: 'ISTP - 장인',
+color: '#EF5350',
+description: '대담하고 실용적인 실험가',
+characteristics: [
+'논리적이고 실용적인 문제 해결',
+'위기 상황에서 침착함',
+'독립적인 성향',
+'즉흥적이고 유연한 대처'
+],
+strengths: [
+'뛰어난 기술적 능력',
+'실용적 문제 해결',
+'위기 대처 능력',
+'객관적 분석력'
+],
+weaknesses: [
+'감정 표현의 어려움',
+'장기 계획 부족',
+'약속과 규칙에 무관심',
+'인내심 부족'
+],
+careers: [
+'엔지니어',
+'기술자',
+'파일럿',
+'운동선수',
+'데이터 분석가'
+],
+relationships: {
+romantic: '자유롭고 독립적인 관계 선호',
+friendship: '실용적이고 편안한 관계 추구',
+workplace: '실제적인 문제 해결이 요구되는 환경 선호'
+}
+},
+'ISFP': {
+title: 'ISFP - 모험가',
+color: '#E57373',
+description: '유연하고 매력적인 예술가',
+characteristics: [
+'예술적 감각이 뛰어남',
+'현재에 충실한 성향',
+'따뜻하고 온화한 성격',
+'개인의 가치 중시'
+],
+strengths: [
+'예술적 재능',
+'감정 이해력',
+'실용적 창의성',
+'적응력'
+],
+weaknesses: [
+'장기 계획 부족',
+'갈등 회피',
+'자기주장 부족',
+'스트레스에 취약'
+],
+careers: [
+'예술가',
+'음악가',
+'패션 디자이너',
+'요리사',
+'사진작가'
+],
+relationships: {
+romantic: '감성적이고 자유로운 관계 추구',
+friendship: '진정성 있는 소수의 관계 선호',
+workplace: '창의적이고 자율적인 환경에서 성과'
+}
+},
+'ESTP': {
+title: 'ESTP - 사업가',
+color: '#D32F2F',
+description: '스마트하고 에너지 넘치는 모험가',
+characteristics: [
+'행동 지향적 성향',
+'현실적이고 실용적인 판단',
+'즉흥적이고 유연한 대처',
+'위험을 감수하는 성향'
+],
+strengths: [
+'뛰어난 문제 해결력',
+'빠른 적응력',
+'실용적 지능',
+'위기 대처 능력'
+],
+weaknesses: [
+'장기 계획 부족',
+'감정적 민감성 부족',
+'규칙과 제약 거부',
+'인내심 부족'
+],
+careers: [
+'기업가',
+'세일즈 매니저',
+'스포츠 선수',
+'경찰/소방관',
+'부동산 중개인'
+],
+relationships: {
+romantic: '자유롭고 모험적인 관계 선호',
+friendship: '활동적이고 재미있는 관계 추구',
+workplace: '역동적이고 실용적인 환경에서 성과'
+}
+},
+'ESFP': {
+title: 'ESFP - 연예인',
+color: '#F44336',
+description: '자발적이고 활기찬 엔터테이너',
+characteristics: [
+'사교적이고 열정적',
+'즐거움을 추구하는 성향',
+'현재에 충실',
+'실용적인 문제 해결'
+],
+strengths: [
+'뛰어난 대인관계',
+'즉흥적 적응력',
+'실용적 창의성',
+'긍정적 에너지'
+],
+weaknesses: [
+'장기 계획 부족',
+'집중력 부족',
+'깊이 있는 분석 어려움',
+'감정적 의사결정'
+],
+careers: [
+'엔터테이너',
+'이벤트 플래너',
+'영업 전문가',
+'관광 가이드',
+'패션 스타일리스트'
+],
+relationships: {
+romantic: '즐겁고 자유로운 관계 추구',
+friendship: '활발하고 재미있는 관계 선호',
+workplace: '역동적이고 자유로운 환경에서 성과'
+}
+}
+};
+characteristics: [
+'논리적이고 객관적인 분석을 선호',
+'장기적인 계획과 전략 수립에 능숙',
+'독립적이며 자기주도적인 성향',
+'지적 호기심이 강하고 새로운 지식 습득을 즐김'
+],
+strengths: [
+'복잡한 문제 해결 능력',
+'전략적 사고와 계획 수립',
+'높은 업무 완성도',
+'독창적인 아이디어 제시'
+],
+weaknesses: [
+'감정 표현의 어려움',
+'타인과의 공감 부족',
+'지나친 완벽주의',
+'융통성 부족'
+],
+careers: [
+'전략 컨설턴트',
+'데이터 분석가',
+'연구원',
+'프로젝트 매니저',
+'투자 분석가'
+],
+relationships: {
+romantic: '논리적이면서도 지적 성장을 추구하는 파트너와 잘 맞음',
+friendship: '깊이 있는 대화와 지적 교류가 가능한 친구 관계 선호',
+workplace: '독립적인 업무 환경에서 최고의 성과를 발휘'
+}
+},
+'INTP': {
+title: 'INTP - 논리학자',
+color: '#78909C',
+description: '끊임없이 새로운 지식을 추구하는 혁신적인 사색가',
+characteristics: [
+'논리적이고 분석적인 사고방식',
+'지적 호기심이 매우 강함',
+'독창적인 문제 해결 능력',
+'객관적이고 이성적인 판단 선호'
+],
+strengths: [
+'뛰어난 추상적 사고력',
+'복잡한 이론 이해와 개발 능력',
+'창의적인 문제 해결 방식',
+'지식 탐구에 대한 열정'
+],
+weaknesses: [
+'사회적 상호작용의 어려움',
+'실용적인 일상 업무에 대한 무관심',
+'과도한 완벽주의적 성향',
+'결정을 미루는 경향'
+],
+careers: [
+'소프트웨어 개발자',
+'과학 연구원',
+'철학자/교수',
+'데이터 사이언티스트',
+'시스템 분석가'
+],
+relationships: {
+romantic: '지적 호기심을 공유하고 독립성을 존중하는 파트너와 잘 맞음',
+friendship: '깊이 있는 토론과 아이디어 교환이 가능한 친구 관계 선호',
+workplace: '자율성이 보장되고 창의적인 문제 해결이 요구되는 환경에서 뛰어난 성과'
+}
+},
+'ENTJ': {
+title: 'ENTJ - 통솔자',
+color: '#455A64',
+description: '대담하고 상상력이 풍부한 강한 의지의 리더',
+characteristics: [
+'카리스마 있는 리더십',
+'전략적 사고와 실행력',
+'효율성과 생산성 중시',
+'목표 지향적이고 야망이 큼'
+],
+strengths: [
+'뛰어난 조직력과 리더십',
+'장기적 비전 수립 능력',
+'결단력 있는 의사결정',
+'높은 성취 동기'
+],
+weaknesses: [
+'지나친 독단적 성향',
+'감정적 배려 부족',
+'완벽주의로 인한 압박감',
+'인내심 부족'
+],
+careers: [
+'최고경영자(CEO)',
+'경영 컨설턴트',
+'기업가',
+'정치인',
+'투자 전문가'
+],
+relationships: {
+romantic: '지적 도전과 성장을 함께할 수 있는 파트너 선호',
+friendship: '목표 지향적이고 성공 추구하는 친구 관계 형성',
+workplace: '리더십을 발휘하고 조직을 이끄는 역할에서 탁월'
+}
+},
+'ENTP': {
+title: 'ENTP - 변론가',
+color: '#607D8B',
+description: '지적 도전을 즐기는 영리하고 호기심 많은 사상가',
+characteristics: [
+'창의적이고 혁신적인 사고',
+'논쟁과 토론을 즐김',
+'다재다능하고 적응력이 뛰어남',
+'새로운 아이디어에 대한 열정'
+],
+strengths: [
+'뛰어난 문제 해결 능력',
+'혁신적인 아이디어 창출',
+'빠른 상황 적응력',
+'설득력 있는 의사소통'
+],
+weaknesses: [
+'일관성과 인내심 부족',
+'감정적 민감성 결여',
+'규칙과 체계 무시',
+'마무리가 약함'
+],
+careers: [
+'기업가',
+'변호사',
+'정치 전략가',
+'마케팅 디렉터',
+'혁신 컨설턴트'
+],
+relationships: {
+romantic: '지적 자극과 자유로운 토론이 가능한 파트너 선호',
+friendship: '창의적이고 도전적인 대화가 가능한 친구 관계 추구',
+workplace: '혁신적인 아이디어를 제시하고 변화를 주도하는 역할'
+}
+}
+// ... 다른 MBTI 유형들도 같은 방식으로 추가
+strengths: [
+'복잡한 문제 해결 능력',
+'전략적 사고와 계획 수립',
+'높은 업무 완성도',
+'독창적인 아이디어 제시'
+],
+weaknesses: [
+'감정 표현의 어려움',
+'타인과의 공감 부족',
+'지나친 완벽주의',
+'융통성 부족'
+],
+careers: [
+'전략 컨설턴트',
+'데이터 분석가',
+'연구원',
+'프로젝트 매니저',
+'투자 분석가'
+],
+relationships: {
+romantic: '논리적이면서도 지적 성장을 추구하는 파트너와 잘 맞음',
+friendship: '깊이 있는 대화와 지적 교류가 가능한 친구 관계 선호',
+workplace: '독립적인 업무 환경에서 최고의 성과를 발휘'
+}
+},
+'INTP': {
+title: 'INTP - 논리학자',
+color: '#78909C',
+description: '끊임없이 새로운 지식을 추구하는 혁신적인 사색가',
+characteristics: [
+'논리적이고 분석적인 사고방식',
+'지적 호기심이 매우 강함',
+'독창적인 문제 해결 능력',
+'객관적이고 이성적인 판단 선호'
+],
+strengths: [
+'뛰어난 추상적 사고력',
+'복잡한 이론 이해와 개발 능력',
+'창의적인 문제 해결 방식',
+'지식 탐구에 대한 열정'
+],
+weaknesses: [
+'사회적 상호작용의 어려움',
+'실용적인 일상 업무에 대한 무관심',
+'과도한 완벽주의적 성향',
+'결정을 미루는 경향'
+],
+careers: [
+'소프트웨어 개발자',
+'과학 연구원',
+'철학자/교수',
+'데이터 사이언티스트',
+'시스템 분석가'
+],
+relationships: {
+romantic: '지적 호기심을 공유하고 독립성을 존중하는 파트너와 잘 맞음',
+friendship: '깊이 있는 토론과 아이디어 교환이 가능한 친구 관계 선호',
+workplace: '자율성이 보장되고 창의적인 문제 해결이 요구되는 환경에서 뛰어난 성과'
+}
+},
+// Add other MBTI types here...
+};
+// 모든 "자세히 보기" 버튼에 이벤트 리스너 추가
+document.querySelectorAll('.view-details-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const mbtiType = this.dataset.mbti;
+const details = mbtiDetails[mbtiType];
+if (!details) {
+console.warn(`No details found for MBTI type: ${mbtiType}`);
+return;
+}
+// 모달 내용 업데이트
+modalTitle.textContent = details.title;
+modalContent.innerHTML = `
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<div class="mb-6">
+<h3 class="text-xl font-bold mb-3" style="color: ${details.color}">${details.title}</h3>
+<p class="text-gray-600">${details.description}</p>
+</div>
+<div class="mb-6">
+<h4 class="font-bold mb-2">주요 특징</h4>
+<ul class="space-y-2">
+${details.characteristics.map(char => `
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>${char}</span>
+</li>
+`).join('')}
+</ul>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">강점</h4>
+<ul class="text-sm space-y-1">
+${details.strengths.map(strength => `<li>• ${strength}</li>`).join('')}
+</ul>
+</div>
+<div class="bg-red-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">약점</h4>
+<ul class="text-sm space-y-1">
+${details.weaknesses.map(weakness => `<li>• ${weakness}</li>`).join('')}
+</ul>
+</div>
+</div>
+</div>
+<div>
+<div class="mb-6">
+<h4 class="font-bold mb-2">추천 직업</h4>
+<div class="flex flex-wrap gap-2">
+${details.careers.map(career => `
+<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">${career}</span>
+`).join('')}
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">연애 관계</h4>
+<p class="text-sm">${details.relationships.romantic}</p>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">친구 관계</h4>
+<p class="text-sm">${details.relationships.friendship}</p>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">직장 생활</h4>
+<p class="text-sm">${details.relationships.workplace}</p>
+</div>
+</div>
+</div>
+</div>
+`;
+modal.classList.remove('hidden');
+modal.classList.add('flex');
+document.body.style.overflow = 'hidden';
+modalTitle.textContent = details.title;
+modalContent.innerHTML = `
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<div class="mb-6">
+<h3 class="text-xl font-bold mb-3" style="color: ${details.color}">${details.title}</h3>
+<p class="text-gray-600">${details.description}</p>
+</div>
+<div class="mb-6">
+<h4 class="font-bold mb-2">주요 특징</h4>
+<ul class="space-y-2">
+${details.characteristics.map(char => `
+<li class="flex items-start">
+<div class="w-5 h-5 flex items-center justify-center text-primary mr-2 mt-0.5">
+<i class="ri-checkbox-circle-line"></i>
+</div>
+<span>${char}</span>
+</li>
+`).join('')}
+</ul>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-green-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">강점</h4>
+<ul class="text-sm space-y-1">
+${details.strengths.map(strength => `
+<li>• ${strength}</li>
+`).join('')}
+</ul>
+</div>
+<div class="bg-red-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">약점</h4>
+<ul class="text-sm space-y-1">
+${details.weaknesses.map(weakness => `
+<li>• ${weakness}</li>
+`).join('')}
+</ul>
+</div>
+</div>
+</div>
+<div>
+<div class="mb-6">
+<h4 class="font-bold mb-2">추천 직업</h4>
+<div class="flex flex-wrap gap-2">
+${details.careers.map(career => `
+<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">${career}</span>
+`).join('')}
+</div>
+</div>
+<div class="mb-6">
+<h4 class="font-bold mb-4">대표적인 INTJ 유명인</h4>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<h5 class="font-medium mb-3">해외 유명인</h5>
+<div class="grid grid-cols-5 gap-4">
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Elon%20Musk%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj1&orientation=squarish" alt="Elon Musk" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">일론 머스크</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Mark%20Zuckerberg%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj2&orientation=squarish" alt="Mark Zuckerberg" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">마크 저커버그</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Christopher%20Nolan%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj3&orientation=squarish" alt="Christopher Nolan" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">크리스토퍼 놀란</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Vladimir%20Putin%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj4&orientation=squarish" alt="Vladimir Putin" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">블라디미르 푸틴</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Nikola%20Tesla%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj5&orientation=squarish" alt="Nikola Tesla" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">니콜라 테슬라</p>
+</div>
+</div>
+</div>
+<div>
+<h5 class="font-medium mb-3">한국 유명인</h5>
+<div class="grid grid-cols-5 gap-4">
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Bang%20Si-hyuk%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj6&orientation=squarish" alt="Bang Si-hyuk" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">방시혁</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Yoo%20Jae-suk%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj7&orientation=squarish" alt="Yoo Jae-suk" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">유재석</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Kim%20Nam-joon%20%28RM%29%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj8&orientation=squarish" alt="Kim Nam-joon" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">김남준(RM)</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Park%20Jin-young%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj9&orientation=squarish" alt="Park Jin-young" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">박진영</p>
+</div>
+<div class="text-center">
+<img src="https://readdy.ai/api/search-image?query=minimalist%20illustration%20of%20Cho%20Seung-woo%20in%20modern%20cartoon%20style%2C%20simple%20clean%20design%2C%20light%20background&width=100&height=100&seq=intj10&orientation=squarish" alt="Cho Seung-woo" class="w-full h-auto rounded-full mb-2">
+<p class="text-sm">조승우</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">연애 관계</h4>
+<p class="text-sm">${details.relationships.romantic}</p>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">친구 관계</h4>
+<p class="text-sm">${details.relationships.friendship}</p>
+</div>
+<div class="bg-purple-50 p-4 rounded-lg">
+<h4 class="font-bold mb-2">직장 생활</h4>
+<p class="text-sm">${details.relationships.workplace}</p>
+</div>
+</div>
+</div>
+</div>
+`;
+modal.classList.remove('hidden');
+modal.classList.add('flex');
+document.body.style.overflow = 'hidden';
+}
+});
+});
+// 모달 닫기 버튼 이벤트
+closeModalBtn.addEventListener('click', function() {
+modal.classList.add('hidden');
+modal.classList.remove('flex');
+document.body.style.overflow = '';
+});
+// 모달 외부 클릭 시 닫기
+modal.addEventListener('click', function(e) {
+if (e.target === modal) {
+modal.classList.add('hidden');
+modal.classList.remove('flex');
+document.body.style.overflow = '';
+}
+});
+});
+</script>
+</body>
+</html>
